@@ -25,8 +25,8 @@
 
 pragma solidity ^0.8.18;
 
-import {ERC20Burnable, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC20Burnable, ERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 
 /*
  * @title DecentralizedStableCoin
@@ -36,6 +36,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  * Relative Stability: Pegged to USD
  *
  * This is the contract meant to be goverened by DSCEngine. This contract is just the ERC20 implementation of our stablecoin system.
+ * ERC20 with simple minting and burning functionality.
  */
 
 contract DecentralizedStableCoin is ERC20Burnable, Ownable {
@@ -45,6 +46,8 @@ contract DecentralizedStableCoin is ERC20Burnable, Ownable {
 
     constructor() ERC20("DecentralizedStableCoin", "DSC") {}
 
+    // onlyOwner = DSCEngine --> only DSCEngine can mint and burn
+
     function burn(uint256 _amount) public override onlyOwner {
         uint256 balance = balanceOf(msg.sender);
         if (_amount <= 0) {
@@ -53,13 +56,10 @@ contract DecentralizedStableCoin is ERC20Burnable, Ownable {
         if (balance < _amount) {
             revert DecentralizedStableCoin__BurnAmountExceedsBalance();
         }
-        super.burn(_amount);
+        super.burn(_amount); // super uses the burn function in ERC20Burnable (parent class)
     }
 
-    function mint(
-        address _to,
-        uint256 _amount
-    ) external onlyOwner returns (bool) {
+    function mint(address _to, uint256 _amount) external onlyOwner returns (bool) {
         if (_to == address(0)) {
             revert DecentralizedStableCoin__NotZeroAddress();
         }

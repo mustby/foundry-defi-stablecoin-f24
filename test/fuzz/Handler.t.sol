@@ -23,7 +23,7 @@ contract Handler is Test {
     MockV3Aggregator public ethUsdPriceFeed;
     MockV3Aggregator public btcUsdPriceFeed;
 
-    uint96 public constant MAX_DEPOSIT_SIZE = type(uint96).max; // the max uint96 value
+    uint256 public constant MAX_DEPOSIT_SIZE = type(uint96).max; // the max uint96 value
 
     constructor(DSCEngine _dscEngine, DecentralizedStableCoin _dsc) {
         dsce = _dscEngine;
@@ -106,7 +106,7 @@ contract Handler is Test {
         // vm.stopPrank();
     }
 
-    // This breaks our invariant test suite!!!!
+    // This breaks our invariant test suite!!!! Price getting adjusted quickly breaks things...
     // function updateCollateralPrice(uint96 newPrice) public {
     //     int256 newPriceInt = int256(uint256(newPrice));
     //     ethUsdPriceFeed.updateAnswer(newPriceInt);

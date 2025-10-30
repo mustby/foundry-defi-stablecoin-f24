@@ -59,5 +59,5 @@ contract Invariants is StdInvariant, Test {
     function invariantGettersShouldNotRevert() public view {
         _dsce.getLiquidationBonus();
         _dsce.getPrecision();
-    }
+    } // this is a freebie test to run...
 }

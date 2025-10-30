@@ -1,13 +1,13 @@
-// // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 
-// // Have our invariant aka properties
+// // // Have our invariant aka properties
 
-// // What are our invariants?
+// // // What are our invariants?
 
-// // 1. The total supply of DSC should be less than the total value of the collateral
-// // 2. Getter view functions should never revert <- evergreen invariant
+// // // 1. The total supply of DSC should be less than the total value of the collateral
+// // // 2. Getter view functions should never revert <- evergreen invariant
 
-pragma solidity ^0.8.18;
+// pragma solidity ^0.8.18;
 
 // import {Test, console} from "lib/forge-std/src/Test.sol";
 // import {StdInvariant} from "lib/forge-std/src/StdInvariant.sol";
@@ -33,7 +33,7 @@ pragma solidity ^0.8.18;
 //         targetContract(address(_dsce));
 //     }
 
-//     function invariantProtocolMustHaveMoreValueThanTotalSupply() public view {
+//     function invariant_protocolMustHaveMoreValueThanTotalSupply() public view {
 //         // get the value of all the collateral in the protocol
 //         // compare it to all of the debt (dsc)
 //         uint256 totalSupply = _dsc.totalSupply();

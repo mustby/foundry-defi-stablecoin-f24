@@ -3,7 +3,7 @@
 pragma solidity ^0.8.18;
 
 import {Test} from "lib/forge-std/src/Test.sol";
-import {DeployDSC} from "../../script/DeployDSC.s.sol";
+import {DeployDSC} from "../../script/DeployDSC.s.sol"; // importing deployment script to use during testing!
 import {DecentralizedStableCoin} from "../../src/DecentralizedStableCoin.sol";
 import {DSCEngine} from "../../src/DSCEngine.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
@@ -43,7 +43,7 @@ contract DSCEngineTest is Test {
         (ethUsdPriceFeed, btcUsdPriceFeed, weth, , ) = config
             .activeNetworkConfig();
 
-        ERC20Mock(weth).mint(user, STARTING_ERC20_BALANCE);
+        ERC20Mock(weth).mint(user, STARTING_ERC20_BALANCE); // this is initialized in the setUp so we don't have to mint to user in each test!
     }
 
     /////////////////////////////
@@ -111,6 +111,8 @@ contract DSCEngineTest is Test {
         dsce.depositCollateral(address(ranToken), AMOUNT_COLLATERAL);
         vm.stopPrank();
     }
+
+    // Created this modifier so that we can reuse it over and over...
 
     modifier depositedCollateral() {
         vm.startPrank(user);
