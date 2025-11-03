@@ -54,9 +54,9 @@ import {OracleLib} from "./libraries/OracleLib.sol";
  */
 
 contract DSCEngine is ReentrancyGuard {
-    ///////////////////////
-    // Errors            //
-    ///////////////////////
+    /*//////////////////////////////////////////////////////////////
+                                 ERRORS
+    //////////////////////////////////////////////////////////////*/
 
     error DSCEngine__NeedsMoreThanZero();
     error DSCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength();
@@ -67,25 +67,28 @@ contract DSCEngine is ReentrancyGuard {
     error DSCEngine__HealthFactorOk();
     error DSCEngine__HealthFactorNotImproved();
 
-    /////////////////////
-    // Types           //
-    /////////////////////
+    /*//////////////////////////////////////////////////////////////
+                                 TYPES
+    //////////////////////////////////////////////////////////////*/
 
     using OracleLib for AggregatorV3Interface;
 
-    /////////////////////////
-    // State Variables     //
-    /////////////////////////
+    /*//////////////////////////////////////////////////////////////
+                            STATE VARIABLES
+    //////////////////////////////////////////////////////////////*/
+
     uint256 private constant _ADDITIONAL_FEED_PRECISION = 1e10;
     uint256 private constant _PRECISION = 1e18;
     uint256 private constant _LIQUIDATION_THRESHOLD = 50; // 200% collateralized
     uint256 private constant _LIQUIDATION_PRECISION = 100;
-    uint256 private constant _MIN_HEALTH_FACTOR = 1e18;
+    uint256 private constant _MIN_HEALTH_FACTOR = 1e18; // does this need to be 1 or 1e18?
     uint256 private constant _LIQUIDATION_BONUS = 10; // this means a 10% bonus
     uint256 private constant _FEED_PRECISION = 1e8;
 
     /// @dev Mapping of token address to price feed address
     mapping(address => address) private _sPriceFeeds;
+    // mapping(address token => address priceFeed) private _sPriceFeeds; // PC used named mapping for clarity
+
     /// @dev Amount of collateral deposited by user
     mapping(address user => mapping(address token => uint256 amount)) private _sCollateralDeposited;
     /// @dev Amount of DSC minted by user
@@ -95,9 +98,9 @@ contract DSCEngine is ReentrancyGuard {
 
     DecentralizedStableCoin private immutable _I_DSC;
 
-    ///////////////////////
-    // Events            //
-    ///////////////////////
+    /*//////////////////////////////////////////////////////////////
+                                 EVENTS
+    //////////////////////////////////////////////////////////////*/
 
     // emit events everytime you update state!
 
@@ -107,11 +110,13 @@ contract DSCEngine is ReentrancyGuard {
         address indexed redeemedFrom, address indexed redeemedTo, address indexed token, uint256 amount
     );
 
+    // Should we add a liquidation event?
+
     // if redeemFrom != redeemedTo, then it was liquidated
 
-    ///////////////////////
-    // Modifiers         //
-    ///////////////////////
+    /*//////////////////////////////////////////////////////////////
+                                 MODIFIERS
+    //////////////////////////////////////////////////////////////*/
 
     modifier moreThanZero(uint256 amount) {
         if (amount == 0) {
@@ -127,9 +132,9 @@ contract DSCEngine is ReentrancyGuard {
         _;
     }
 
-    ///////////////////////
-    // Functions         //
-    ///////////////////////
+    /*//////////////////////////////////////////////////////////////
+                                 FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     constructor(address[] memory tokenAddresses, address[] memory priceFeedAddresses, address dscAddress) {
         if (tokenAddresses.length != priceFeedAddresses.length) {
@@ -142,9 +147,9 @@ contract DSCEngine is ReentrancyGuard {
         _I_DSC = DecentralizedStableCoin(dscAddress);
     }
 
-    /////////////////////////
-    // External Functions  //
-    /////////////////////////
+    /*//////////////////////////////////////////////////////////////
+                            EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     /*
      * @param tokenCollateralAddress The address of the token to deposit as collateral.
@@ -213,7 +218,7 @@ contract DSCEngine is ReentrancyGuard {
     /**
      * @notice Follows CEI - Checks / Effects / Interactions
      * @param amountDscToMint The amount of decentralized stablecoin to mint
-     * @notice they must have more collateral value than the minimum threshold
+     * @notice Minters must have more collateral value than the minimum threshold
      */
 
     function mintDsc(uint256 amountDscToMint) public moreThanZero(amountDscToMint) nonReentrant {
@@ -280,9 +285,9 @@ contract DSCEngine is ReentrancyGuard {
         _revertIfHealthFactorIsBroken(msg.sender);
     }
 
-    ////////////////////////////////////////
-    // Private & Internal View Functions  //
-    ////////////////////////////////////////
+    /*//////////////////////////////////////////////////////////////
+                    Private & Internal View Functions
+    //////////////////////////////////////////////////////////////*/
 
     /*
      * @dev Low-level internal function, do not call unless the function calling it is checking for health factors being broken.
@@ -297,12 +302,15 @@ contract DSCEngine is ReentrancyGuard {
         _I_DSC.burn(amountDscToBurn);
     }
 
+    /*
+    * @dev This function is very important as it is crucial to the liquidation logic...where only the "liquidate" function can call "_redeemCollateral" on behalf of another user"
+    */
+
     function _redeemCollateral(address from, address to, address tokenCollateralAddress, uint256 amountCollateral)
         private
     {
         // Update the collateral balance
         _sCollateralDeposited[from][tokenCollateralAddress] -= amountCollateral;
-        emit CollateralRedeemed(from, to, tokenCollateralAddress, amountCollateral);
         // Emit the event
         emit CollateralRedeemed(from, to, tokenCollateralAddress, amountCollateral);
         // Perform the token transfer and log its status
@@ -360,9 +368,9 @@ contract DSCEngine is ReentrancyGuard {
         }
     }
 
-    ////////////////////////////////////////
-    // Getter Functions Below!  ////////////
-    ////////////////////////////////////////
+    /*//////////////////////////////////////////////////////////////
+                            GETTER FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     function getCollateralTokens() public view returns (address[] memory) {
         return _sCollateralTokens;
@@ -408,9 +416,9 @@ contract DSCEngine is ReentrancyGuard {
         return _healthFactor(user);
     }
 
-    ////////////////////////////////////////
-    // Public & External View Functions  ///
-    ////////////////////////////////////////
+    /*//////////////////////////////////////////////////////////////
+                    Private & External View Functions
+    //////////////////////////////////////////////////////////////*/
 
     function calculateHealthFactor(uint256 totalDscMinted, uint256 collateralValueInUsd)
         external
@@ -423,7 +431,7 @@ contract DSCEngine is ReentrancyGuard {
     function getTokenAmountFromUsd(address token, uint256 usdAmountInWei) public view returns (uint256) {
         // price of ETH (token)
         // $/ETH ... have ETH ... how much USD?
-        // $2000/ETH ...have $1000 of ETH...divide what you have by the price? = 0.5 ETH
+        // $2000/ETH ...have $1000 of ETH...divide what you have in wei by the price? = 0.5 ETH
         AggregatorV3Interface priceFeed = AggregatorV3Interface(_sPriceFeeds[token]);
         (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
         return (usdAmountInWei * _PRECISION) / (uint256(price) * _ADDITIONAL_FEED_PRECISION);
