@@ -33,29 +33,21 @@ contract Handler is Test {
         weth = ERC20Mock(collateralTokens[0]);
         wbtc = ERC20Mock(collateralTokens[1]);
 
-        ethUsdPriceFeed = MockV3Aggregator(
-            dsce.getCollateralTokenPriceFeed(address(weth))
-        );
-        btcUsdPriceFeed = MockV3Aggregator(
-            dsce.getCollateralTokenPriceFeed(address(wbtc))
-        );
+        ethUsdPriceFeed = MockV3Aggregator(dsce.getCollateralTokenPriceFeed(address(weth)));
+        btcUsdPriceFeed = MockV3Aggregator(dsce.getCollateralTokenPriceFeed(address(wbtc)));
     }
 
-    // redeem collateral <-
+    // redeem collateral <- Call this when you have collateral
 
     function mintDsc(uint256 amount, uint256 addressSeed) public {
         if (usersWithCollateralDeposited.length == 0) {
             return;
         }
-        address sender = usersWithCollateralDeposited[
-            addressSeed % usersWithCollateralDeposited.length
-        ];
+        address sender = usersWithCollateralDeposited[addressSeed % usersWithCollateralDeposited.length];
 
-        (uint256 totalDscMinted, uint256 collateralValueInUsd) = dsce
-            .getAccountInformation(sender);
+        (uint256 totalDscMinted, uint256 collateralValueInUsd) = dsce.getAccountInformation(sender);
 
-        int256 maxDscToMint = (int256(collateralValueInUsd) / 2) -
-            int256(totalDscMinted);
+        int256 maxDscToMint = (int256(collateralValueInUsd) / 2) - int256(totalDscMinted);
         if (maxDscToMint < 0) {
             return;
         }
@@ -67,15 +59,12 @@ contract Handler is Test {
         vm.startPrank(sender);
         dsce.mintDsc(amount);
         vm.stopPrank();
-        timesMintIsCalled++;
+        timesMintIsCalled++; // this is a ghost variable to track how many times mint is called
     }
 
-    function depositCollateral(
-        uint256 collateralSeed,
-        uint256 amountCollateral
-    ) public {
-        ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
-        amountCollateral = bound(amountCollateral, 1, MAX_DEPOSIT_SIZE);
+    function depositCollateral(uint256 collateralSeed, uint256 amountCollateral) public {
+        ERC20Mock collateral = _getCollateralFromSeed(collateralSeed); // bounding of the collateral types
+        amountCollateral = bound(amountCollateral, 1, MAX_DEPOSIT_SIZE); // bounding the deposit size
 
         vm.startPrank(msg.sender);
         collateral.mint(msg.sender, amountCollateral);
@@ -86,18 +75,12 @@ contract Handler is Test {
         usersWithCollateralDeposited.push(msg.sender);
     }
 
-    function redeemCollateral(
-        uint256 collateralSeed,
-        uint256 amountCollateral
-    ) public {
+    function redeemCollateral(uint256 collateralSeed, uint256 amountCollateral) public {
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
-        uint256 maxCollateralToRedeem = dsce.getCollateralBalanceOfUser(
-            address(collateral),
-            msg.sender
-        );
-        amountCollateral = bound(amountCollateral, 0, maxCollateralToRedeem);
+        uint256 maxCollateralToRedeem = dsce.getCollateralBalanceOfUser(address(collateral), msg.sender);
+        amountCollateral = bound(amountCollateral, 0, maxCollateralToRedeem); // users should only be redeeming up to what they put in the system
         if (amountCollateral == 0) {
-            return;
+            return; // this return means to end the function call here...
         }
         dsce.redeemCollateral(address(collateral), amountCollateral);
 
@@ -113,9 +96,7 @@ contract Handler is Test {
     // }
 
     // Helper functions
-    function _getCollateralFromSeed(
-        uint256 collateralSeed
-    ) private view returns (ERC20Mock) {
+    function _getCollateralFromSeed(uint256 collateralSeed) private view returns (ERC20Mock) {
         if (collateralSeed % 2 == 0) {
             return weth;
         } else {

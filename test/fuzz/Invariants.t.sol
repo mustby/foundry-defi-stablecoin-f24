@@ -10,13 +10,13 @@
 pragma solidity ^0.8.19;
 
 import {Test} from "lib/forge-std/src/Test.sol";
+import {console} from "lib/forge-std/src/console.sol";
 import {StdInvariant} from "lib/forge-std/src/StdInvariant.sol";
 import {DeployDSC} from "../../script/DeployDSC.s.sol";
 import {DSCEngine} from "../../src/DSCEngine.sol";
 import {DecentralizedStableCoin} from "../../src/DecentralizedStableCoin.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
 import {IERC20} from "lib/forge-std/src/interfaces/IERC20.sol";
-import "lib/forge-std/src/console.sol";
 import {Handler} from "./Handler.t.sol";
 
 contract Invariants is StdInvariant, Test {
@@ -31,7 +31,7 @@ contract Invariants is StdInvariant, Test {
     function setUp() external {
         _deployer = new DeployDSC();
         (_dsc, _dsce, _config) = _deployer.run();
-        (, , _weth, _wbtc, ) = _config.activeNetworkConfig();
+        (,, _weth, _wbtc,) = _config.activeNetworkConfig();
         // targetContract(address(_dsce));
         _handler = new Handler(_dsce, _dsc);
         targetContract(address(_handler));
@@ -59,5 +59,5 @@ contract Invariants is StdInvariant, Test {
     function invariantGettersShouldNotRevert() public view {
         _dsce.getLiquidationBonus();
         _dsce.getPrecision();
-    } // this is a freebie test to run...
+    } // this is a freebie test to run...absolute layup!
 }
