@@ -83,10 +83,6 @@ contract Handler is Test {
             return; // this return means to end the function call here...
         }
         dsce.redeemCollateral(address(collateral), amountCollateral);
-
-        // vm.startPrank(msg.sender);
-        // dsce.redeemCollateral(address(collateral), amountCollateral);
-        // vm.stopPrank();
     }
 
     // This breaks our invariant test suite!!!! Price getting adjusted quickly breaks things...
